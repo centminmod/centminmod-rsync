@@ -3,7 +3,7 @@
 Custom rsync RPMs for CentOS 7 64bit based Centmin Mod LEMP stacks
 
 * rsync 3.1.3
-* rsync 3.1.4 dev build
+* rsync 3.1.4 [dev build log](https://git.samba.org/?p=rsync.git;a=shortlog)
 
 CentOS 7 stock distro rsync version
 
