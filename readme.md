@@ -21,6 +21,29 @@ rsync comes with ABSOLUTELY NO WARRANTY.  This is free software, and you
 are welcome to redistribute it under certain conditions.  See the GNU
 General Public Licence for details.
 ```
+```
+rpm -qa --changelog rsync | head -n20
+* Wed Mar 27 2019 Michal Ruprich <mruprich@redhat.com> - 3.1.2-6.1
+- Resolves: #1693108 - remove-source-files fails with symlinks
+
+* Mon Aug 20 2018 Michal Ruprich <mruprich@redhat.com> - 3.1.2-6
+- Related: #1615799 - reverting changes made in RHEL-7.6
+
+* Mon Aug 20 2018 Michal Ruprich <mruprich@redhat.com> - 3.1.2-5
+- Resolves: #1615799 - Rsync built-in testsuite fails with selinux enabled
+
+* Wed Oct 18 2017 Michal Ruprich - 3.1.2-4
+- Related: #1432899 - removing dependencies on perl
+- using the bundled zlib.h(#1491582)
+- turning on upstream tests
+
+* Wed Aug 30 2017 Michal Ruprich - 3.1.2-1
+- Resolves: #1432899 - Rebase rsync to version >= 3.1.0
+- rebase to 3.1.2
+
+* Tue Jan 24 2017 Michal Ruprich - 3.0.9-18
+- Resolves: #1324754 -  rsyncd unit enters failed state on exit
+```
 
 Custom rsync 3.1.3
 
