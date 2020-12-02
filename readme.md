@@ -2,10 +2,17 @@
 
 Custom rsync RPMs for CentOS 7 64bit based Centmin Mod LEMP stacks
 
+* rsync 3.2.3 no avx2 and avx2 yum packages with xxHash & zstd support
 * rsync 3.1.3
 * rsync 3.1.4 [dev build log](https://git.samba.org/?p=rsync.git;a=shortlog)
 
-CentOS 7 stock distro rsync version
+# Dependencies
+
+```
+yum -y install acl libacl-devel attr libattr-devel xxhash-devel libzstd-devel lz4-devel
+```
+
+# CentOS 7 stock distro rsync version
 
 ```
 rsync --version
@@ -45,7 +52,103 @@ rpm -qa --changelog rsync | head -n20
 - Resolves: #1324754 -  rsyncd unit enters failed state on exit
 ```
 
-Custom rsync 3.1.3
+# Custom rsync 3.2.3
+
+### no avx2 support
+
+```
+rsync --version
+rsync  version 3.2.3  protocol version 31
+Copyright (C) 1996-2020 by Andrew Tridgell, Wayne Davison, and others.
+Web site: https://rsync.samba.org/
+Capabilities:
+    64-bit files, 64-bit inums, 64-bit timestamps, 64-bit long ints,
+    socketpairs, hardlinks, hardlink-specials, symlinks, IPv6, atimes,
+    batchfiles, inplace, append, ACLs, xattrs, optional protect-args, iconv,
+    symtimes, prealloc, stop-at, no crtimes
+Optimizations:
+    SIMD, asm, openssl-crypto
+Checksum list:
+    xxh128 xxh3 xxh64 (xxhash) md5 md4 none
+Compress list:
+    zstd lz4 zlibx zlib none
+
+rsync comes with ABSOLUTELY NO WARRANTY.  This is free software, and you
+are welcome to redistribute it under certain conditions.  See the GNU
+General Public Licence for details.
+```
+```
+yum -q info rsync-custom-noavx2-3.2.3
+Installed Packages
+Name        : rsync-custom-noavx2
+Arch        : x86_64
+Version     : 3.2.3
+Release     : 1.el7
+Size        : 877 k
+Repo        : installed
+From repo   : /rsync-custom-noavx2-3.2.3-1.el7.x86_64
+Summary     : rsync 3.2.3 (noavx2) for centminmod.com LEMP stack
+URL         : https://centminmod.com
+License     : unknown
+Description : rsync 3.2.3 (noavx2) for centminmod.com LEMP stacks
+```
+```
+rpm -qlp rsync-custom-noavx2-3.2.3-1.el7.x86_64.rpm      
+/usr/local/bin/rsync
+/usr/local/bin/rsync-ssl
+/usr/local/share/man/man1/rsync-ssl.1
+/usr/local/share/man/man1/rsync.1
+/usr/local/share/man/man5/rsyncd.conf.5
+```
+
+### avx2 support
+
+```
+rsync --version
+rsync  version 3.2.3  protocol version 31
+Copyright (C) 1996-2020 by Andrew Tridgell, Wayne Davison, and others.
+Web site: https://rsync.samba.org/
+Capabilities:
+    64-bit files, 64-bit inums, 64-bit timestamps, 64-bit long ints,
+    socketpairs, hardlinks, hardlink-specials, symlinks, IPv6, atimes,
+    batchfiles, inplace, append, ACLs, xattrs, optional protect-args, iconv,
+    symtimes, prealloc, stop-at, no crtimes
+Optimizations:
+    SIMD, asm, openssl-crypto
+Checksum list:
+    xxh64 (xxhash) md5 md4 none
+Compress list:
+    zstd lz4 zlibx zlib none
+
+rsync comes with ABSOLUTELY NO WARRANTY.  This is free software, and you
+are welcome to redistribute it under certain conditions.  See the GNU
+General Public Licence for details.
+```
+```
+yum -q info rsync-custom-avx2-3.2.3
+Installed Packages
+Name        : rsync-custom-avx2
+Arch        : x86_64
+Version     : 3.2.3
+Release     : 1.el7
+Size        : 873 k
+Repo        : installed
+From repo   : /rsync-custom-avx2-3.2.3-1.el7.x86_64
+Summary     : rsync 3.2.3 (avx2) for centminmod.com LEMP stack
+URL         : https://centminmod.com
+License     : unknown
+Description : rsync 3.2.3 (avx2) for centminmod.com LEMP stacks
+```
+```
+rpm -qlp rsync-custom-avx2-3.2.3-1.el7.x86_64.rpm  
+/usr/local/bin/rsync
+/usr/local/bin/rsync-ssl
+/usr/local/share/man/man1/rsync-ssl.1
+/usr/local/share/man/man1/rsync.1
+/usr/local/share/man/man5/rsyncd.conf.5
+```
+
+# Custom rsync 3.1.3
 
 ```
 /usr/local/bin/rsync --version
