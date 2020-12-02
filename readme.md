@@ -133,13 +133,12 @@ Capabilities:
 Optimizations:
     SIMD, asm, openssl-crypto
 Checksum list:
-    xxh64 (xxhash) md5 md4 none
+    xxh128 xxh3 xxh64 (xxhash) md5 md4 none
 Compress list:
     zstd lz4 zlibx zlib none
 
 rsync comes with ABSOLUTELY NO WARRANTY.  This is free software, and you
-are welcome to redistribute it under certain conditions.  See the GNU
-General Public Licence for details.
+are welcome to redistribute it under certain conditions.  See the G
 ```
 ```
 yum -q info rsync-custom-avx2-3.2.3
@@ -148,7 +147,7 @@ Name        : rsync-custom-avx2
 Arch        : x86_64
 Version     : 3.2.3
 Release     : 1.el7
-Size        : 873 k
+Size        : 893 k
 Repo        : installed
 From repo   : /rsync-custom-avx2-3.2.3-1.el7.x86_64
 Summary     : rsync 3.2.3 (avx2) for centminmod.com LEMP stack
