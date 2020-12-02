@@ -6,10 +6,22 @@ Custom rsync RPMs for CentOS 7 64bit based Centmin Mod LEMP stacks
 * rsync 3.1.3
 * rsync 3.1.4 [dev build log](https://git.samba.org/?p=rsync.git;a=shortlog)
 
-# Dependencies
+# Install & Dependencies
 
 ```
 yum -y install acl libacl-devel attr libattr-devel xxhash-devel libzstd-devel lz4-devel
+```
+
+non-avx2 install
+
+```
+yum localinstall rsync-custom-noavx2-3.2.3-1.el7.x86_64.rpm
+```
+
+avx2 install
+
+```
+yum localinstall rsync-custom-avx2-3.2.3-1.el7.x86_64.rpm
 ```
 
 # CentOS 7 stock distro rsync version
