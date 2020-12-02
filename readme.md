@@ -30,7 +30,7 @@ Benchmark comparison for rsync 3.1.2 native CentOS 7 binary versus rsync 3.2.3 b
 
 * default CentOS 7 rsync 3.1.2 with -z compress = 6.095s (sent 263,545,200 bytes)
 * default CentOS 7 rsync 3.1.2 without -z compress = 0.519s sent 263,459,568 bytes
-* rsync 3.2.3 no flags default = 0.364s (sent 263,454,894 bytes)
+* rsync 3.2.3 no flags default with -z compress = 0.364s (sent 263,454,894 bytes)
 * md5 + zstd with -z compress = 0.670s (sent 263,454,894 bytes)
 * md5 + zlibx with -z compress = 1.184s (sent 263,505,130 bytes)
 * md5 + lz4 with -z compress = 0.583s (sent 264,571,081 bytes)
