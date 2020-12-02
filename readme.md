@@ -26,9 +26,10 @@ yum localinstall rsync-custom-avx2-3.2.3-1.el7.x86_64.rpm
 
 # Rsync Benchmarks
 
-Benchmark comparison for rsync 3.1.2 native CentOS 7 binary versus rsync 3.2.3 built RPM binary on avx2 system with Intel Core i7 4790K Haswell cpu for 6x compressed log file rync on same system disk. Looks like rsync 3.2.3 no flags defaults to xxhash + zstd.
+Benchmark comparison for rsync 3.1.2 native CentOS 7 binary versus rsync 3.2.3 built RPM binary on avx2 system with Intel Core i7 4790K Haswell cpu for 6x compressed log file rync on same system disk. Looks like rsync 3.2.3 no flags defaults to xxhash + zstd and is ~29.87% faster than rsync 3.1.2 without -z flag and ~94.03% faster than rsync 3.1.2 with -z flag - making rsync 3.2.3 a good candidate if you're rsync transferring a mix of compressed and uncompressed files together.
 
-* default CentOS 7 rsync 3.1.2 = 6.095s (sent 263,545,200 bytes)
+* default CentOS 7 rsync 3.1.2 with -z compress = 6.095s (sent 263,545,200 bytes)
+* default CentOS 7 rsync 3.1.2 without -z compress = 0.519s sent 263,459,568 bytes
 * rsync 3.2.3 no flags default = 0.364s (sent 263,454,894 bytes)
 * md5 + zstd = 0.670s (sent 263,454,894 bytes)
 * md5 + zlibx = 1.184s (sent 263,505,130 bytes)
