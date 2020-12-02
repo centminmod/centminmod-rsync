@@ -112,6 +112,11 @@ rpm -qlp rsync-custom-noavx2-3.2.3-1.el7.x86_64.rpm
 /usr/local/share/man/man1/rsync.1
 /usr/local/share/man/man5/rsyncd.conf.5
 ```
+```
+rpm -qa --changelog rsync-custom-noavx2
+* Wed Dec 02 2020 George Liu <centminmod.com> 3.2.3
+- rsync 3.2.3 (noavx2) for centminmod.com LEMP stack
+```
 
 ### avx2 support
 
@@ -158,6 +163,11 @@ rpm -qlp rsync-custom-avx2-3.2.3-1.el7.x86_64.rpm
 /usr/local/share/man/man1/rsync-ssl.1
 /usr/local/share/man/man1/rsync.1
 /usr/local/share/man/man5/rsyncd.conf.5
+```
+```
+rpm -qa --changelog rsync-custom-avx2
+* Wed Dec 02 2020 George Liu <centminmod.com> 3.2.3
+- rsync 3.2.3 (avx2) for centminmod.com LEMP stack
 ```
 
 # Custom rsync 3.1.3
