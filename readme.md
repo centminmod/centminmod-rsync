@@ -39,6 +39,17 @@ Benchmark comparison for rsync 3.1.2 native CentOS 7 binary versus rsync 3.2.3 b
 * xxhash + lz4 with -z compress = 0.322s (sent 264,571,033 bytes)
 
 ```
+time /usr/bin/rsync -avzi zcat-test/ zcat-test-dst/
+time /usr/bin/rsync -avi zcat-test/ zcat-test-dst/
+time /usr/local/bin/rsync -avzi zcat-test/ zcat-test-dst/
+time rsync -avzi --cc md5 --zc zstd zcat-test/ zcat-test-dst/
+time rsync -avzi --cc md5 --zc zlibx zcat-test/ zcat-test-dst/
+time rsync -avzi --cc md5 --zc lz4 zcat-test/ zcat-test-dst/
+time rsync -avzi --cc xxhash --zc zstd zcat-test/ zcat-test-dst/
+time rsync -avzi --cc xxhash --zc zlibx zcat-test/ zcat-test-dst/
+time rsync -avzi --cc xxhash --zc lz4 zcat-test/ zcat-test-dst/
+```
+```
 ls -lah zcat-test
 total 252M
 drwxr-xr-x   2 root root 4.0K Dec  2 09:36 .
