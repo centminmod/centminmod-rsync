@@ -33,9 +33,11 @@ Benchmark comparison for rsync 3.1.2 native CentOS 7 binary versus rsync 3.2.3 b
 * rsync 3.2.3 no flags default with -z compress = 0.364s (sent 263,454,894 bytes)
 * md5 + zstd with -z compress = 0.670s (sent 263,454,894 bytes)
 * md5 + zlibx with -z compress = 1.184s (sent 263,505,130 bytes)
+* md5 + zlib with -z compress = 1.184s (sent 263,505,130 bytes)
 * md5 + lz4 with -z compress = 0.583s (sent 264,571,081 bytes)
 * xxhash + zstd with -z compress = 0.365s (sent 263,454,846 bytes)
 * xxhash + zlibx with -z compress = 0.890s (sent 263,505,082 bytes)
+* xxhash + zlib with -z compress = 0.889s (sent 263,505,082 bytes)
 * xxhash + lz4 with -z compress = 0.322s (sent 264,571,033 bytes)
 
 ```
@@ -44,9 +46,11 @@ time /usr/bin/rsync -avi zcat-test/ zcat-test-dst/
 time /usr/local/bin/rsync -avzi zcat-test/ zcat-test-dst/
 time rsync -avzi --cc md5 --zc zstd zcat-test/ zcat-test-dst/
 time rsync -avzi --cc md5 --zc zlibx zcat-test/ zcat-test-dst/
+time rsync -avzi --cc md5 --zc zlib zcat-test/ zcat-test-dst/
 time rsync -avzi --cc md5 --zc lz4 zcat-test/ zcat-test-dst/
 time rsync -avzi --cc xxhash --zc zstd zcat-test/ zcat-test-dst/
 time rsync -avzi --cc xxhash --zc zlibx zcat-test/ zcat-test-dst/
+time rsync -avzi --cc xxhash --zc zlib zcat-test/ zcat-test-dst/ 
 time rsync -avzi --cc xxhash --zc lz4 zcat-test/ zcat-test-dst/
 ```
 ```
