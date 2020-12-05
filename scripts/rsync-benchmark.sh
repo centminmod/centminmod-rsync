@@ -172,7 +172,7 @@ rsync_cmd() {
   if [[ "$native" = 'native' ]]; then
     EXTRAOPTS=
     RSYNCLOGFILENAME="rsyncbench-rsync-native-compressed-${DT}.log"
-    RSYNCLOGFILENAME_CSV="rsyncbench-rsync-native-compressed-${DT_CSV}.csv"
+    RSYNCLOGFILENAME_CSV="rsyncbench-rsync-native-${DT_CSV}.csv"
     if [ ! -f "${LOGDIR}/${RSYNCLOGFILENAME_CSV}" ]; then
       touch "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
       echo "version,speed,time,bytes-sent,megabytes-sent" >> "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
@@ -200,12 +200,12 @@ rsync_cmd() {
 
     # no-compress
     RSYNCLOGFILENAME="rsyncbench-rsync-native-no-compress-${DT}.log"
-    RSYNCLOGFILENAME_CSV="rsyncbench-rsync-native-no-compress-${DT_CSV}.csv"
+    # RSYNCLOGFILENAME_CSV="rsyncbench-rsync-native-no-compress-${DT_CSV}.csv"
     RSYNC_OPTS=$(echo $RSYNC_OPTS | sed -e 's|z||g')
-    if [ ! -f "${LOGDIR}/${RSYNCLOGFILENAME_CSV}" ]; then
-      touch "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
-      echo "version,speed,time,bytes-sent,megabytes-sent" >> "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
-    fi
+    # if [ ! -f "${LOGDIR}/${RSYNCLOGFILENAME_CSV}" ]; then
+    #   touch "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
+    #   echo "version,speed,time,bytes-sent,megabytes-sent" >> "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
+    # fi
     if [[ "$DEBUG_CMD" = [yY] ]]; then
       echo "$BIN ${RSYNC_OPTS}${EXTRAOPTS}${RSYNC_DEBUG} --log-file=${LOGDIR}/${RSYNCLOGFILENAME} $srcdir $dstdir"
     fi
@@ -233,7 +233,7 @@ rsync_cmd() {
         DT=$(date +"%d%m%y-%H%M%S")
         EXTRAOPTS=" --cc $hash --zc ${comp}"
         RSYNCLOGFILENAME="rsyncbench-${hash}-${comp}-${DT}.log"
-        RSYNCLOGFILENAME_CSV="rsyncbench-${hash}-${comp}-${DT_CSV}.csv"
+        RSYNCLOGFILENAME_CSV="rsyncbench-checksum-comp-list-${DT_CSV}.csv"
         if [ ! -f "${LOGDIR}/${RSYNCLOGFILENAME_CSV}" ]; then
           touch "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
           echo "version,speed,time,bytes-sent,megabytes-sent" >> "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
@@ -263,6 +263,9 @@ rsync_cmd() {
         cleanup "$dstdir" "${LOGDIR}/${RSYNCLOGFILENAME}"
       done
     done
+  fi
+  if [ -f "${LOGDIR}/${RSYNCLOGFILENAME_CSV}" ]; then
+    echo "csv log: ${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
   fi
 }
 
