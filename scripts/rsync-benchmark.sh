@@ -83,6 +83,7 @@ rsync_leveltest() {
     RSYNC_VER=$($BIN --version 2>&1 | awk 'NR==1 {print $3}')
   fi
   for i in $(seq 1 $comp_level) ; do
+    DT=$(date +"%d%m%y-%H%M%S")
     if [[ "$native" = 'native' ]]; then
       EXTRAOPTS=" --compress-level=${i}"
       RSYNCLOGFILENAME="rsyncbench-rsync-native-compressed-lvl${i}-${DT}.log"
@@ -190,6 +191,7 @@ rsync_cmd() {
   else
     for comp in ${COMPLIST[@]}; do
       for hash in ${HASHLIST[@]}; do
+        DT=$(date +"%d%m%y-%H%M%S")
         EXTRAOPTS=" --cc $hash --zc ${comp}"
         RSYNCLOGFILENAME="rsyncbench-${hash}-${comp}-${DT}.log"
         if [[ "$DEBUG_CMD" = [yY] ]]; then
