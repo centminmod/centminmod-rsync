@@ -14,6 +14,13 @@ DEBUG='n'
 DEBUG_CMD='y'
 SHORTTEST='y'
 
+COMPLEVEL='9'
+ZSTD_COMPLEVEL='22'
+ZSTD_FASTCOMPLEVEL='10'
+ZSTD_ULTRACOMPLEVEL='22'
+LZFOURCOMPLEVEL='9'
+XZCOMPLEVEL='9'
+
 LOGDIR='/home/rsync-benchmarks'
 DT=$(date +"%d%m%y-%H%M%S")
 ########################################
@@ -54,6 +61,75 @@ cleanup() {
   sync && echo 3 > /proc/sys/vm/drop_caches
   sleep "$SLEEP"
   cleanup_log "$2"
+}
+
+rsync_leveltest() {
+  checksum="$1"
+  comp_type="$2"
+  comp_level="$3"
+  srcdir="$4"
+  dstdir="$5"
+  native="$6"
+  if [[ "$srcdir" = 'native' ]]; then
+    comp_level="$1"
+    srcdir="$2"
+    dstdir="$3"
+    native="$4"
+    BIN="$RSYNC_BIN"
+    RSYNC_DEBUG=
+    RSYNC_VER=$($BIN --version 2>&1 | awk 'NR==1 {print $3}')
+  else
+    BIN="$RSYNC_NEWBIN"
+    RSYNC_VER=$($BIN --version 2>&1 | awk 'NR==1 {print $3}')
+  fi
+  for i in $(seq 1 $comp_level) ; do
+    if [[ "$native" = 'native' ]]; then
+      EXTRAOPTS=" --compress-level=${i}"
+      RSYNCLOGFILENAME="rsyncbench-rsync-native-compressed-lvl${i}-${DT}.log"
+      if [[ "$DEBUG_CMD" = [yY] ]]; then
+        echo "$BIN ${RSYNC_OPTS}${EXTRAOPTS}${RSYNC_DEBUG} --log-file=${LOGDIR}/${RSYNCLOGFILENAME} $srcdir $dstdir"
+      fi
+      /usr/bin/time -o "${LOGDIR}/time.txt" --format="[rsync ${RSYNC_VER} native compress lvl ${i}] real: %es user: %Us sys: %Ss cpu: %P maxmem: %M KB cswaits: %w" $BIN ${RSYNC_OPTS}${EXTRAOPTS}${RSYNC_DEBUG} --log-file="${LOGDIR}/${RSYNCLOGFILENAME}" "$srcdir" "$dstdir" > "${LOGDIR}/rsyncbench.log"
+      numfiles=$(cat ${LOGDIR}/${RSYNCLOGFILENAME} | awk '/Number of files:/ {print $0}' | cut -d " " -f6- | sed -e 's|(||g' -e 's|)||g')
+      speedup=$(cat ${LOGDIR}/${RSYNCLOGFILENAME} | awk '/total size is / {print $10}')
+      totalbytes=$(cat ${LOGDIR}/${RSYNCLOGFILENAME} | awk '/total size is / {print $7}' | sed -e 's|,||g')
+      sentbytes=$(cat ${LOGDIR}/${RSYNCLOGFILENAME} | awk '/sent / {print $5}' | sed -e 's|,||g')
+      bytesrate=$(cat ${LOGDIR}/${RSYNCLOGFILENAME} | awk '/sent / {print $10}' | sed -e 's|,||g')
+      mbrate=$(echo "scale=4; $bytesrate/1024/1024" | bc)
+      transfertime=$(awk '{print $8}' ${LOGDIR}/time.txt | sed -e 's|s||g')
+      transferspeed=$(echo "scale=4; ($sentbytes/$transfertime)/1024/1024" | bc)
+      echo "[rsync ${RSYNC_VER} native compress lvl ${i}] $numfiles" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
+      echo "[rsync ${RSYNC_VER} native compress lvl ${i}] total bytes: $totalbytes sent bytes: $sentbytes (${bytesrate} per second)" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
+      echo "[rsync ${RSYNC_VER} native compress lvl ${i}] transfer speed (MB/s): $transferspeed speedup: $speedup" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
+      cat "${LOGDIR}/time.txt" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
+      echo
+      cleanup "$dstdir" "${LOGDIR}/${RSYNCLOGFILENAME}"
+    else
+      EXTRAOPTS=" --cc $checksum --zc ${comp_type} --zl ${i}"
+      RSYNCLOGFILENAME="rsyncbench-${checksum}-${comp_type}-lvl${i}-${DT}.log"
+      if [[ "$DEBUG_CMD" = [yY] ]]; then
+        echo "$BIN ${RSYNC_OPTS}${EXTRAOPTS}${RSYNC_DEBUG} --log-file=${LOGDIR}/${RSYNCLOGFILENAME} $srcdir $dstdir"
+      fi
+      /usr/bin/time -o "${LOGDIR}/time.txt" --format="[rsync ${RSYNC_VER} $checksum-$comp_type-${i}] real: %es user: %Us sys: %Ss cpu: %P maxmem: %M KB cswaits: %w" $BIN ${RSYNC_OPTS}${EXTRAOPTS}${RSYNC_DEBUG} --log-file="${LOGDIR}/${RSYNCLOGFILENAME}" "$srcdir" "$dstdir" > "${LOGDIR}/rsyncbench.log"
+      # totalbytes=$(cat ${LOGDIR}/rsyncbench.log | awk '/total size is / {print $4}' | sed -e 's|,||g')
+      # sentbytes=$(cat ${LOGDIR}/rsyncbench.log | awk '/sent / {print $2}' | sed -e 's|,||g')
+      # bytesrate=$(cat ${LOGDIR}/rsyncbench.log | awk '/sent / {print $7}' | sed -e 's|,||g')
+      numfiles=$(cat ${LOGDIR}/${RSYNCLOGFILENAME} | awk '/Number of files:/ {print $0}' | cut -d " " -f6- | sed -e 's|(||g' -e 's|)||g')
+      speedup=$(cat ${LOGDIR}/${RSYNCLOGFILENAME} | awk '/total size is / {print $10}')
+      totalbytes=$(cat ${LOGDIR}/${RSYNCLOGFILENAME} | awk '/total size is / {print $7}' | sed -e 's|,||g')
+      sentbytes=$(cat ${LOGDIR}/${RSYNCLOGFILENAME} | awk '/sent / {print $5}' | sed -e 's|,||g')
+      bytesrate=$(cat ${LOGDIR}/${RSYNCLOGFILENAME} | awk '/sent / {print $10}' | sed -e 's|,||g')
+      mbrate=$(echo "scale=4; $bytesrate/1024/1024" | bc)
+      transfertime=$(awk '{print $5}' ${LOGDIR}/time.txt | sed -e 's|s||g')
+      transferspeed=$(echo "scale=4; ($sentbytes/$transfertime)/1024/1024" | bc)
+      echo "[rsync ${RSYNC_VER} $checksum-$comp_type-${i}] $numfiles" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
+      echo "[rsync ${RSYNC_VER} $checksum-$comp_type-${i}] total bytes: $totalbytes sent bytes: $sentbytes (${bytesrate} per second)" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
+      echo "[rsync ${RSYNC_VER} $checksum-$comp_type-${i}] transfer speed (MB/s): $transferspeed speedup: $speedup" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
+      cat "${LOGDIR}/time.txt" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
+      echo
+      cleanup "$dstdir" "${LOGDIR}/${RSYNCLOGFILENAME}"
+    fi
+  done
 }
 
 rsync_cmd() {
@@ -147,6 +223,8 @@ help() {
   echo
   echo "$0 bench sourcedir/ destdir/"
   echo "$0 bench-native sourcedir/ destdir/"
+  echo "$0 bench-lvl checksum comptype complevel sourcedir/ destdir/"
+  echo "$0 bench-lvl-native complevel sourcedir/ destdir/"
 }
 
 trap cleanup_log SIGHUP SIGINT SIGTERM SIGTSTP
@@ -162,6 +240,20 @@ case "$1" in
   bench-native )
     if [[ -d "$2" && -d "$3" ]]; then
       rsync_cmd "$2" "$3" native
+    else
+      help
+    fi
+    ;;
+  bench-lvl )
+    if [[ "$2" && "$3" && "$4" && -d "$5" && -d "$6" ]]; then
+      rsync_leveltest "$2" "$3" "$4" "$5" "$6"
+    else
+      help
+    fi
+    ;;
+  bench-lvl-native )
+    if [[ "$2" && -d "$3" && -d "$4" ]]; then
+      rsync_leveltest "$2" "$3" "$4" native
     else
       help
     fi

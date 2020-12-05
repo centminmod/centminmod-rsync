@@ -463,3 +463,88 @@ rsync 3.2.3 md5 + none|243.7495|97|2744
 [rsync 3.2.3 md5-none] transfer speed (MB/s): 243.7495 speedup: 1.00
 [rsync 3.2.3 md5-none] real: 3.03s user: 2.01s sys: 0.93s cpu: 97% maxmem: 2744 KB cswaits: 22452
 ```
+
+# Compression Level Tests
+
+Testing a specific checksum, compression method and iterate through compression levels 1 to 6. Sent bytes reported should be decreasing with each compression level increase.
+
+for rsync 3.2.3 xxh128 + zstd
+
+```
+./rsync-benchmark.sh bench-lvl xxh128 zstd 6 /home/rsync-test/ /home/rsync-test-dst/     
+/usr/local/bin/rsync -avzi --stats --cc xxh128 --zc zstd --zl 1 --debug=NSTR --log-file=/home/rsync-benchmarks/rsyncbench-xxh128-zstd-lvl1-051220-135519.log /home/rsync-test/ /home/rsync-test-dst/
+[rsync 3.2.3 xxh128-zstd-1] files: 2,848 reg: 2,847, dir: 1
+[rsync 3.2.3 xxh128-zstd-1] total bytes: 773951797 sent bytes: 310921418 (88850151.43 per second)
+[rsync 3.2.3 xxh128-zstd-1] transfer speed (MB/s): 104.7765 speedup: 2.49
+[rsync 3.2.3 xxh128-zstd-1] real: 2.83s user: 1.63s sys: 0.88s cpu: 88% maxmem: 3988 KB cswaits: 10227
+
+/usr/local/bin/rsync -avzi --stats --cc xxh128 --zc zstd --zl 2 --debug=NSTR --log-file=/home/rsync-benchmarks/rsyncbench-xxh128-zstd-lvl2-051220-135519.log /home/rsync-test/ /home/rsync-test-dst/
+[rsync 3.2.3 xxh128-zstd-2] files: 2,848 reg: 2,847, dir: 1
+[rsync 3.2.3 xxh128-zstd-2] total bytes: 773951797 sent bytes: 307790964 (87955736.00 per second)
+[rsync 3.2.3 xxh128-zstd-2] transfer speed (MB/s): 103.7216 speedup: 2.51
+[rsync 3.2.3 xxh128-zstd-2] real: 2.83s user: 1.36s sys: 0.77s cpu: 75% maxmem: 4712 KB cswaits: 10172
+
+/usr/local/bin/rsync -avzi --stats --cc xxh128 --zc zstd --zl 3 --debug=NSTR --log-file=/home/rsync-benchmarks/rsyncbench-xxh128-zstd-lvl3-051220-135519.log /home/rsync-test/ /home/rsync-test-dst/
+[rsync 3.2.3 xxh128-zstd-3] files: 2,848 reg: 2,847, dir: 1
+[rsync 3.2.3 xxh128-zstd-3] total bytes: 773951797 sent bytes: 303996691 (86871658.00 per second)
+[rsync 3.2.3 xxh128-zstd-3] transfer speed (MB/s): 98.2758 speedup: 2.55
+[rsync 3.2.3 xxh128-zstd-3] real: 2.95s user: 1.56s sys: 0.74s cpu: 78% maxmem: 6248 KB cswaits: 9007
+
+/usr/local/bin/rsync -avzi --stats --cc xxh128 --zc zstd --zl 4 --debug=NSTR --log-file=/home/rsync-benchmarks/rsyncbench-xxh128-zstd-lvl4-051220-135519.log /home/rsync-test/ /home/rsync-test-dst/
+[rsync 3.2.3 xxh128-zstd-4] files: 2,848 reg: 2,847, dir: 1
+[rsync 3.2.3 xxh128-zstd-4] total bytes: 773951797 sent bytes: 303988206 (67564959.56 per second)
+[rsync 3.2.3 xxh128-zstd-4] transfer speed (MB/s): 90.0328 speedup: 2.55
+[rsync 3.2.3 xxh128-zstd-4] real: 3.22s user: 1.89s sys: 0.85s cpu: 85% maxmem: 7532 KB cswaits: 8556
+
+/usr/local/bin/rsync -avzi --stats --cc xxh128 --zc zstd --zl 5 --debug=NSTR --log-file=/home/rsync-benchmarks/rsyncbench-xxh128-zstd-lvl5-051220-135519.log /home/rsync-test/ /home/rsync-test-dst/
+[rsync 3.2.3 xxh128-zstd-5] files: 2,848 reg: 2,847, dir: 1
+[rsync 3.2.3 xxh128-zstd-5] total bytes: 773951797 sent bytes: 301135733 (54761790.00 per second)
+[rsync 3.2.3 xxh128-zstd-5] transfer speed (MB/s): 57.0945 speedup: 2.57
+[rsync 3.2.3 xxh128-zstd-5] real: 5.03s user: 3.83s sys: 0.99s cpu: 95% maxmem: 8536 KB cswaits: 8366
+
+/usr/local/bin/rsync -avzi --stats --cc xxh128 --zc zstd --zl 6 --debug=NSTR --log-file=/home/rsync-benchmarks/rsyncbench-xxh128-zstd-lvl6-051220-135519.log /home/rsync-test/ /home/rsync-test-dst/
+[rsync 3.2.3 xxh128-zstd-6] files: 2,848 reg: 2,847, dir: 1
+[rsync 3.2.3 xxh128-zstd-6] total bytes: 773951797 sent bytes: 299686228 (54498243.64 per second)
+[rsync 3.2.3 xxh128-zstd-6] transfer speed (MB/s): 55.8209 speedup: 2.58
+[rsync 3.2.3 xxh128-zstd-6] real: 5.12s user: 3.95s sys: 0.78s cpu: 92% maxmem: 9560 KB cswaits: 8361
+```
+for rsync 3.1.2 native 
+
+```
+./rsync-benchmark.sh bench-lvl-native 6 /home/rsync-test/ /home/rsync-test-dst/
+/usr/bin/rsync -avzi --stats --compress-level=1 --log-file=/home/rsync-benchmarks/rsyncbench-rsync-native-compressed-lvl1-051220-141131.log /home/rsync-test/ /home/rsync-test-dst/
+[rsync 3.1.2 native compress lvl 1] files: 2,848 reg: 2,847, dir: 1
+[rsync 3.1.2 native compress lvl 1] total bytes: 773951797 sent bytes: 336106976 (32015341.43 per second)
+[rsync 3.1.2 native compress lvl 1] transfer speed (MB/s): 29.4881 speedup: 2.30
+[rsync 3.1.2 native compress lvl 1] real: 10.87s user: 10.73s sys: 0.77s cpu: 105% maxmem: 2320 KB cswaits: 12411
+
+/usr/bin/rsync -avzi --stats --compress-level=2 --log-file=/home/rsync-benchmarks/rsyncbench-rsync-native-compressed-lvl2-051220-141131.log /home/rsync-test/ /home/rsync-test-dst/
+[rsync 3.1.2 native compress lvl 2] files: 2,848 reg: 2,847, dir: 1
+[rsync 3.1.2 native compress lvl 2] total bytes: 773951797 sent bytes: 332848202 (31704982.29 per second)
+[rsync 3.1.2 native compress lvl 2] transfer speed (MB/s): 30.2025 speedup: 2.32
+[rsync 3.1.2 native compress lvl 2] real: 10.51s user: 10.71s sys: 0.82s cpu: 109% maxmem: 2328 KB cswaits: 12387
+
+/usr/bin/rsync -avzi --stats --compress-level=3 --log-file=/home/rsync-benchmarks/rsyncbench-rsync-native-compressed-lvl3-051220-141131.log /home/rsync-test/ /home/rsync-test-dst/
+[rsync 3.1.2 native compress lvl 3] files: 2,848 reg: 2,847, dir: 1
+[rsync 3.1.2 native compress lvl 3] total bytes: 773951797 sent bytes: 330489500 (28742922.78 per second)
+[rsync 3.1.2 native compress lvl 3] transfer speed (MB/s): 27.7691 speedup: 2.34
+[rsync 3.1.2 native compress lvl 3] real: 11.35s user: 11.86s sys: 0.89s cpu: 112% maxmem: 2328 KB cswaits: 12351
+
+/usr/bin/rsync -avzi --stats --compress-level=4 --log-file=/home/rsync-benchmarks/rsyncbench-rsync-native-compressed-lvl4-051220-141131.log /home/rsync-test/ /home/rsync-test-dst/
+[rsync 3.1.2 native compress lvl 4] files: 2,848 reg: 2,847, dir: 1
+[rsync 3.1.2 native compress lvl 4] total bytes: 773951797 sent bytes: 325021461 (26006045.84 per second)
+[rsync 3.1.2 native compress lvl 4] transfer speed (MB/s): 25.9384 speedup: 2.38
+[rsync 3.1.2 native compress lvl 4] real: 11.95s user: 12.15s sys: 0.77s cpu: 108% maxmem: 2320 KB cswaits: 12282
+
+/usr/bin/rsync -avzi --stats --compress-level=5 --log-file=/home/rsync-benchmarks/rsyncbench-rsync-native-compressed-lvl5-051220-141131.log /home/rsync-test/ /home/rsync-test-dst/
+[rsync 3.1.2 native compress lvl 5] files: 2,848 reg: 2,847, dir: 1
+[rsync 3.1.2 native compress lvl 5] total bytes: 773951797 sent bytes: 320904465 (25676686.16 per second)
+[rsync 3.1.2 native compress lvl 5] transfer speed (MB/s): 24.0975 speedup: 2.41
+[rsync 3.1.2 native compress lvl 5] real: 12.70s user: 12.84s sys: 0.81s cpu: 107% maxmem: 2324 KB cswaits: 12239
+
+/usr/bin/rsync -avzi --stats --compress-level=6 --log-file=/home/rsync-benchmarks/rsyncbench-rsync-native-compressed-lvl6-051220-141131.log /home/rsync-test/ /home/rsync-test-dst/
+[rsync 3.1.2 native compress lvl 6] files: 2,848 reg: 2,847, dir: 1
+[rsync 3.1.2 native compress lvl 6] total bytes: 773951797 sent bytes: 319193453 (22017073.45 per second)
+[rsync 3.1.2 native compress lvl 6] transfer speed (MB/s): 21.7123 speedup: 2.42
+[rsync 3.1.2 native compress lvl 6] real: 14.02s user: 14.23s sys: 0.74s cpu: 106% maxmem: 2324 KB cswaits: 12220
+```
