@@ -82,11 +82,22 @@ rsync_leveltest() {
     BIN="$RSYNC_NEWBIN"
     RSYNC_VER=$($BIN --version 2>&1 | awk 'NR==1 {print $3}')
   fi
-  for i in $(seq 1 $comp_level) ; do
+  if [[ "$comp_type" = 'zstd' ]]; then
+    comp_start=-100
+  else
+    comp_start=1
+  fi
+  DT_CSV=$(date +"%d%m%y-%H%M%S")
+  for i in $(seq $comp_start $comp_level) ; do
     DT=$(date +"%d%m%y-%H%M%S")
     if [[ "$native" = 'native' ]]; then
       EXTRAOPTS=" --compress-level=${i}"
       RSYNCLOGFILENAME="rsyncbench-rsync-native-compressed-lvl${i}-${DT}.log"
+      RSYNCLOGFILENAME_CSV="rsyncbench-rsync-native-compressed-lvls-${DT_CSV}.csv"
+      if [ ! -f "${LOGDIR}/${RSYNCLOGFILENAME_CSV}" ]; then
+        touch "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
+        echo "version,comp-type,comp-lvl,speed,time,bytes-sent" >> "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
+      fi
       if [[ "$DEBUG_CMD" = [yY] ]]; then
         echo "$BIN ${RSYNC_OPTS}${EXTRAOPTS}${RSYNC_DEBUG} --log-file=${LOGDIR}/${RSYNCLOGFILENAME} $srcdir $dstdir"
       fi
@@ -103,11 +114,17 @@ rsync_leveltest() {
       echo "[rsync ${RSYNC_VER} native compress lvl ${i}] total bytes: $totalbytes sent bytes: $sentbytes (${bytesrate} per second)" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
       echo "[rsync ${RSYNC_VER} native compress lvl ${i}] transfer speed (MB/s): $transferspeed speedup: $speedup" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
       cat "${LOGDIR}/time.txt" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
+      echo "rsync-${RSYNC_VER},zlib,${i},${transferspeed},${transfertime},${sentbytes}" >> "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
       echo
       cleanup "$dstdir" "${LOGDIR}/${RSYNCLOGFILENAME}"
     else
       EXTRAOPTS=" --cc $checksum --zc ${comp_type} --zl ${i}"
       RSYNCLOGFILENAME="rsyncbench-${checksum}-${comp_type}-lvl${i}-${DT}.log"
+      RSYNCLOGFILENAME_CSV="rsyncbench-${checksum}-${comp_type}-lvls-${DT_CSV}.csv"
+      if [ ! -f "${LOGDIR}/${RSYNCLOGFILENAME_CSV}" ]; then
+        touch "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
+        echo "version,comp-type,comp-lvl,speed,time,bytes-sent" >> "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
+      fi
       if [[ "$DEBUG_CMD" = [yY] ]]; then
         echo "$BIN ${RSYNC_OPTS}${EXTRAOPTS}${RSYNC_DEBUG} --log-file=${LOGDIR}/${RSYNCLOGFILENAME} $srcdir $dstdir"
       fi
@@ -127,16 +144,21 @@ rsync_leveltest() {
       echo "[rsync ${RSYNC_VER} $checksum-$comp_type-${i}] total bytes: $totalbytes sent bytes: $sentbytes (${bytesrate} per second)" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
       echo "[rsync ${RSYNC_VER} $checksum-$comp_type-${i}] transfer speed (MB/s): $transferspeed speedup: $speedup" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
       cat "${LOGDIR}/time.txt" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
+      echo "rsync-${RSYNC_VER},${comp_type},${i},${transferspeed},${transfertime},${sentbytes}" >> "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
       echo
       cleanup "$dstdir" "${LOGDIR}/${RSYNCLOGFILENAME}"
     fi
   done
+  if [ -f "${LOGDIR}/${RSYNCLOGFILENAME_CSV}" ]; then
+    echo "csv log: ${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
+  fi
 }
 
 rsync_cmd() {
   srcdir="$1"
   dstdir="$2"
   native="$3"
+  DT_CSV=$(date +"%d%m%y-%H%M%S")
   if [[ "$native" = 'native' ]]; then
     BIN="$RSYNC_BIN"
     RSYNC_DEBUG=
@@ -148,6 +170,11 @@ rsync_cmd() {
   if [[ "$native" = 'native' ]]; then
     EXTRAOPTS=
     RSYNCLOGFILENAME="rsyncbench-rsync-native-compressed-${DT}.log"
+    RSYNCLOGFILENAME_CSV="rsyncbench-rsync-native-compressed-${DT_CSV}.csv"
+    if [ ! -f "${LOGDIR}/${RSYNCLOGFILENAME_CSV}" ]; then
+      touch "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
+      echo "version,speed,time,bytes-sent" >> "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
+    fi
     if [[ "$DEBUG_CMD" = [yY] ]]; then
       echo "$BIN ${RSYNC_OPTS}${EXTRAOPTS}${RSYNC_DEBUG} --log-file=${LOGDIR}/${RSYNCLOGFILENAME} $srcdir $dstdir"
     fi
@@ -164,12 +191,18 @@ rsync_cmd() {
     echo "[rsync ${RSYNC_VER} native compressed] total bytes: $totalbytes sent bytes: $sentbytes (${bytesrate} per second)" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
     echo "[rsync ${RSYNC_VER} native compressed] transfer speed (MB/s): $transferspeed speedup: $speedup" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
     cat "${LOGDIR}/time.txt" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
+    echo "rsync-${RSYNC_VER}-compress,${transferspeed},${transfertime},${sentbytes}" >> "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
     echo
     cleanup "$dstdir" "${LOGDIR}/${RSYNCLOGFILENAME}"
 
     # no-compress
     RSYNCLOGFILENAME="rsyncbench-rsync-native-no-compress-${DT}.log"
+    RSYNCLOGFILENAME_CSV="rsyncbench-rsync-native-no-compress-${DT_CSV}.csv"
     RSYNC_OPTS=$(echo $RSYNC_OPTS | sed -e 's|z||g')
+    if [ ! -f "${LOGDIR}/${RSYNCLOGFILENAME_CSV}" ]; then
+      touch "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
+      echo "version,speed,time,bytes-sent" >> "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
+    fi
     if [[ "$DEBUG_CMD" = [yY] ]]; then
       echo "$BIN ${RSYNC_OPTS}${EXTRAOPTS}${RSYNC_DEBUG} --log-file=${LOGDIR}/${RSYNCLOGFILENAME} $srcdir $dstdir"
     fi
@@ -186,14 +219,21 @@ rsync_cmd() {
     echo "[rsync ${RSYNC_VER} native no-compress] total bytes: $totalbytes sent bytes: $sentbytes (${bytesrate} per second)" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
     echo "[rsync ${RSYNC_VER} native no-compress] transfer speed (MB/s): $transferspeed speedup: $speedup" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
     cat "${LOGDIR}/time.txt" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
+    echo "rsync-${RSYNC_VER}-no-compress,${transferspeed},${transfertime},${sentbytes}" >> "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
     echo
     cleanup "$dstdir" "${LOGDIR}/${RSYNCLOGFILENAME}"
   else
+    DT_CSV=$(date +"%d%m%y-%H%M%S")
     for comp in ${COMPLIST[@]}; do
       for hash in ${HASHLIST[@]}; do
         DT=$(date +"%d%m%y-%H%M%S")
         EXTRAOPTS=" --cc $hash --zc ${comp}"
         RSYNCLOGFILENAME="rsyncbench-${hash}-${comp}-${DT}.log"
+        RSYNCLOGFILENAME_CSV="rsyncbench-${hash}-${comp}-${DT_CSV}.csv"
+        if [ ! -f "${LOGDIR}/${RSYNCLOGFILENAME_CSV}" ]; then
+          touch "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
+          echo "version,speed,time,bytes-sent" >> "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
+        fi
         if [[ "$DEBUG_CMD" = [yY] ]]; then
           echo "$BIN ${RSYNC_OPTS}${EXTRAOPTS}${RSYNC_DEBUG} --log-file=${LOGDIR}/${RSYNCLOGFILENAME} $srcdir $dstdir"
         fi
@@ -213,6 +253,7 @@ rsync_cmd() {
         echo "[rsync ${RSYNC_VER} $hash-$comp] total bytes: $totalbytes sent bytes: $sentbytes (${bytesrate} per second)" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
         echo "[rsync ${RSYNC_VER} $hash-$comp] transfer speed (MB/s): $transferspeed speedup: $speedup" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
         cat "${LOGDIR}/time.txt" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
+        echo "rsync-${RSYNC_VER}-${hash}-${comp},${transferspeed},${transfertime},${sentbytes}" >> "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
         echo
         cleanup "$dstdir" "${LOGDIR}/${RSYNCLOGFILENAME}"
       done
