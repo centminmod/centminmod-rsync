@@ -4,11 +4,11 @@
 ########################################
 HASHLIST=(xxh128 xxh3 xxh64 xxhash md5)
 COMPLIST=(lz4 zstd zlib none)
-SLEEP=3
+SLEEP=1.5
 RSYNCBINLIST=(/usr/local/bin/rsync /usr/bin/rsync)
 RSYNC_NEWBIN='/usr/local/bin/rsync'
 RSYNC_BIN='/usr/bin/rsync'
-RSYNC_OPTS='-avzi --stats'
+RSYNC_OPTS='-avzi -AHX --delete --stats'
 RSYNC_VERBOSE='y'
 DEBUG='n'
 DEBUG_CMD='y'
@@ -96,7 +96,7 @@ rsync_leveltest() {
       RSYNCLOGFILENAME_CSV="rsyncbench-rsync-native-compressed-lvls-${DT_CSV}.csv"
       if [ ! -f "${LOGDIR}/${RSYNCLOGFILENAME_CSV}" ]; then
         touch "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
-        echo "version,comp-type,comp-lvl,speed,time,bytes-sent,megabytes-sent" >> "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
+        echo "version,comp-type,comp-lvl,speed,time,cpu%,mem (kb),bytes-sent,megabytes-sent" >> "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
       fi
       if [[ "$DEBUG_CMD" = [yY] ]]; then
         echo "$BIN ${RSYNC_OPTS}${EXTRAOPTS}${RSYNC_DEBUG} --log-file=${LOGDIR}/${RSYNCLOGFILENAME} $srcdir $dstdir"
@@ -110,12 +110,14 @@ rsync_leveltest() {
       bytesrate=$(cat ${LOGDIR}/${RSYNCLOGFILENAME} | awk '/sent / {print $10}' | sed -e 's|,||g')
       mbrate=$(echo "scale=4; $bytesrate/1024/1024" | bc)
       transfertime=$(awk '{print $8}' ${LOGDIR}/time.txt | sed -e 's|s||g')
+      cpu=$(awk '{print $14}' ${LOGDIR}/time.txt | sed -e 's|s||g')
+      mem=$(awk '{print $16}' ${LOGDIR}/time.txt | sed -e 's|s||g')
       transferspeed=$(echo "scale=4; ($sentbytes/$transfertime)/1024/1024" | bc)
       echo "[rsync ${RSYNC_VER} native compress lvl ${i}] $numfiles" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
       echo "[rsync ${RSYNC_VER} native compress lvl ${i}] total bytes: $totalbytes sent bytes: $sentbytes (${bytesrate} per second)" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
       echo "[rsync ${RSYNC_VER} native compress lvl ${i}] transfer speed (MB/s): $transferspeed speedup: $speedup" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
       cat "${LOGDIR}/time.txt" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
-      echo "rsync-${RSYNC_VER},zlib,${i},${transferspeed},${transfertime},${sentbytes},$sentmegabytes" >> "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
+      echo "rsync-${RSYNC_VER},zlib,${i},${transferspeed},${transfertime},${cpu},${mem},${sentbytes},$sentmegabytes" >> "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
       echo
       cleanup "$dstdir" "${LOGDIR}/${RSYNCLOGFILENAME}"
     else
@@ -124,7 +126,7 @@ rsync_leveltest() {
       RSYNCLOGFILENAME_CSV="rsyncbench-${checksum}-${comp_type}-lvls-${DT_CSV}.csv"
       if [ ! -f "${LOGDIR}/${RSYNCLOGFILENAME_CSV}" ]; then
         touch "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
-        echo "version,comp-type,comp-lvl,speed,time,bytes-sent,megabytes-sent" >> "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
+        echo "version,comp-type,comp-lvl,speed,time,cpu%,mem (kb),bytes-sent,megabytes-sent" >> "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
       fi
       if [[ "$DEBUG_CMD" = [yY] ]]; then
         echo "$BIN ${RSYNC_OPTS}${EXTRAOPTS}${RSYNC_DEBUG} --log-file=${LOGDIR}/${RSYNCLOGFILENAME} $srcdir $dstdir"
@@ -141,18 +143,22 @@ rsync_leveltest() {
       bytesrate=$(cat ${LOGDIR}/${RSYNCLOGFILENAME} | awk '/sent / {print $10}' | sed -e 's|,||g')
       mbrate=$(echo "scale=4; $bytesrate/1024/1024" | bc)
       transfertime=$(awk '{print $5}' ${LOGDIR}/time.txt | sed -e 's|s||g')
+      cpu=$(awk '{print $11}' ${LOGDIR}/time.txt | sed -e 's|s||g')
+      mem=$(awk '{print $13}' ${LOGDIR}/time.txt | sed -e 's|s||g')
       transferspeed=$(echo "scale=4; ($sentbytes/$transfertime)/1024/1024" | bc)
       echo "[rsync ${RSYNC_VER} $checksum-$comp_type-${i}] $numfiles" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
       echo "[rsync ${RSYNC_VER} $checksum-$comp_type-${i}] total bytes: $totalbytes sent bytes: $sentbytes (${bytesrate} per second)" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
       echo "[rsync ${RSYNC_VER} $checksum-$comp_type-${i}] transfer speed (MB/s): $transferspeed speedup: $speedup" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
       cat "${LOGDIR}/time.txt" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
-      echo "rsync-${RSYNC_VER},${comp_type},${i},${transferspeed},${transfertime},${sentbytes},$sentmegabytes" >> "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
+      echo "rsync-${RSYNC_VER},${comp_type},${i},${transferspeed},${transfertime},${cpu},${mem},${sentbytes},$sentmegabytes" >> "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
       echo
       cleanup "$dstdir" "${LOGDIR}/${RSYNCLOGFILENAME}"
     fi
   done
   if [ -f "${LOGDIR}/${RSYNCLOGFILENAME_CSV}" ]; then
     echo "csv log: ${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
+    echo
+    cat "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
   fi
 }
 
@@ -175,7 +181,7 @@ rsync_cmd() {
     RSYNCLOGFILENAME_CSV="rsyncbench-rsync-native-${DT_CSV}.csv"
     if [ ! -f "${LOGDIR}/${RSYNCLOGFILENAME_CSV}" ]; then
       touch "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
-      echo "version,speed,time,bytes-sent,megabytes-sent" >> "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
+      echo "version,speed,time,cpu%,mem (kb),bytes-sent,megabytes-sent" >> "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
     fi
     if [[ "$DEBUG_CMD" = [yY] ]]; then
       echo "$BIN ${RSYNC_OPTS}${EXTRAOPTS}${RSYNC_DEBUG} --log-file=${LOGDIR}/${RSYNCLOGFILENAME} $srcdir $dstdir"
@@ -189,12 +195,14 @@ rsync_cmd() {
     bytesrate=$(cat ${LOGDIR}/${RSYNCLOGFILENAME} | awk '/sent / {print $10}' | sed -e 's|,||g')
     mbrate=$(echo "scale=4; $bytesrate/1024/1024" | bc)
     transfertime=$(awk '{print $6}' ${LOGDIR}/time.txt | sed -e 's|s||g')
+    cpu=$(awk '{print $12}' ${LOGDIR}/time.txt | sed -e 's|s||g')
+    mem=$(awk '{print $14}' ${LOGDIR}/time.txt | sed -e 's|s||g')
     transferspeed=$(echo "scale=4; ($sentbytes/$transfertime)/1024/1024" | bc)
     echo "[rsync ${RSYNC_VER} native compressed] $numfiles" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
     echo "[rsync ${RSYNC_VER} native compressed] total bytes: $totalbytes sent bytes: $sentbytes (${bytesrate} per second)" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
     echo "[rsync ${RSYNC_VER} native compressed] transfer speed (MB/s): $transferspeed speedup: $speedup" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
     cat "${LOGDIR}/time.txt" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
-    echo "rsync-${RSYNC_VER}-compress,${transferspeed},${transfertime},${sentbytes},$sentmegabytes" >> "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
+    echo "rsync-${RSYNC_VER}-compress,${transferspeed},${transfertime},${cpu},${mem},${sentbytes},$sentmegabytes" >> "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
     echo
     cleanup "$dstdir" "${LOGDIR}/${RSYNCLOGFILENAME}"
 
@@ -204,7 +212,7 @@ rsync_cmd() {
     RSYNC_OPTS=$(echo $RSYNC_OPTS | sed -e 's|z||g')
     # if [ ! -f "${LOGDIR}/${RSYNCLOGFILENAME_CSV}" ]; then
     #   touch "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
-    #   echo "version,speed,time,bytes-sent,megabytes-sent" >> "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
+    #   echo "version,speed,time,cpu%,mem (kb),bytes-sent,megabytes-sent" >> "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
     # fi
     if [[ "$DEBUG_CMD" = [yY] ]]; then
       echo "$BIN ${RSYNC_OPTS}${EXTRAOPTS}${RSYNC_DEBUG} --log-file=${LOGDIR}/${RSYNCLOGFILENAME} $srcdir $dstdir"
@@ -218,12 +226,14 @@ rsync_cmd() {
     bytesrate=$(cat ${LOGDIR}/${RSYNCLOGFILENAME} | awk '/sent / {print $10}' | sed -e 's|,||g')
     mbrate=$(echo "scale=4; $bytesrate/1024/1024" | bc)
     transfertime=$(awk '{print $6}' ${LOGDIR}/time.txt | sed -e 's|s||g')
+    cpu=$(awk '{print $12}' ${LOGDIR}/time.txt | sed -e 's|s||g')
+    mem=$(awk '{print $14}' ${LOGDIR}/time.txt | sed -e 's|s||g')
     transferspeed=$(echo "scale=4; ($sentbytes/$transfertime)/1024/1024" | bc)
     echo "[rsync ${RSYNC_VER} native no-compress] $numfiles" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
     echo "[rsync ${RSYNC_VER} native no-compress] total bytes: $totalbytes sent bytes: $sentbytes (${bytesrate} per second)" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
     echo "[rsync ${RSYNC_VER} native no-compress] transfer speed (MB/s): $transferspeed speedup: $speedup" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
     cat "${LOGDIR}/time.txt" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
-    echo "rsync-${RSYNC_VER}-no-compress,${transferspeed},${transfertime},${sentbytes},$sentmegabytes" >> "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
+    echo "rsync-${RSYNC_VER}-no-compress,${transferspeed},${transfertime},${cpu},${mem},${sentbytes},$sentmegabytes" >> "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
     echo
     cleanup "$dstdir" "${LOGDIR}/${RSYNCLOGFILENAME}"
   else
@@ -236,7 +246,7 @@ rsync_cmd() {
         RSYNCLOGFILENAME_CSV="rsyncbench-checksum-comp-list-${DT_CSV}.csv"
         if [ ! -f "${LOGDIR}/${RSYNCLOGFILENAME_CSV}" ]; then
           touch "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
-          echo "version,speed,time,bytes-sent,megabytes-sent" >> "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
+          echo "version,speed,time,cpu%,mem (kb),bytes-sent,megabytes-sent" >> "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
         fi
         if [[ "$DEBUG_CMD" = [yY] ]]; then
           echo "$BIN ${RSYNC_OPTS}${EXTRAOPTS}${RSYNC_DEBUG} --log-file=${LOGDIR}/${RSYNCLOGFILENAME} $srcdir $dstdir"
@@ -253,19 +263,56 @@ rsync_cmd() {
         bytesrate=$(cat ${LOGDIR}/${RSYNCLOGFILENAME} | awk '/sent / {print $10}' | sed -e 's|,||g')
         mbrate=$(echo "scale=4; $bytesrate/1024/1024" | bc)
         transfertime=$(awk '{print $5}' ${LOGDIR}/time.txt | sed -e 's|s||g')
+        cpu=$(awk '{print $11}' ${LOGDIR}/time.txt | sed -e 's|s||g')
+        mem=$(awk '{print $13}' ${LOGDIR}/time.txt | sed -e 's|s||g')
         transferspeed=$(echo "scale=4; ($sentbytes/$transfertime)/1024/1024" | bc)
         echo "[rsync ${RSYNC_VER} $hash-$comp] $numfiles" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
         echo "[rsync ${RSYNC_VER} $hash-$comp] total bytes: $totalbytes sent bytes: $sentbytes (${bytesrate} per second)" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
         echo "[rsync ${RSYNC_VER} $hash-$comp] transfer speed (MB/s): $transferspeed speedup: $speedup" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
         cat "${LOGDIR}/time.txt" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
-        echo "rsync-${RSYNC_VER}-${hash}-${comp},${transferspeed},${transfertime},${sentbytes},$sentmegabytes" >> "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
+        echo "rsync-${RSYNC_VER}-${hash}-${comp},${transferspeed},${transfertime},${cpu},${mem},${sentbytes},$sentmegabytes" >> "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
         echo
         cleanup "$dstdir" "${LOGDIR}/${RSYNCLOGFILENAME}"
+        # run zstd fast compression test too
+        if [[ "$comp" = 'zstd' ]]; then
+          for lvl in -30 -60 -150 -350 -8000; do
+            DT=$(date +"%d%m%y-%H%M%S")
+            EXTRAOPTS=" --cc $hash --zc ${comp} --zl ${lvl}"
+            RSYNCLOGFILENAME="rsyncbench-${hash}-${comp}-${DT}.log"
+            if [[ "$DEBUG_CMD" = [yY] ]]; then
+              echo "$BIN ${RSYNC_OPTS}${EXTRAOPTS}${RSYNC_DEBUG} --log-file=${LOGDIR}/${RSYNCLOGFILENAME} $srcdir $dstdir"
+            fi
+            /usr/bin/time -o "${LOGDIR}/time.txt" --format="[rsync ${RSYNC_VER} $hash-$comp-${lvl} real: %es user: %Us sys: %Ss cpu: %P maxmem: %M KB cswaits: %w" $BIN ${RSYNC_OPTS}${EXTRAOPTS}${RSYNC_DEBUG} --log-file="${LOGDIR}/${RSYNCLOGFILENAME}" "$srcdir" "$dstdir" > "${LOGDIR}/rsyncbench.log"
+            # totalbytes=$(cat ${LOGDIR}/rsyncbench.log | awk '/total size is / {print $4}' | sed -e 's|,||g')
+            # sentbytes=$(cat ${LOGDIR}/rsyncbench.log | awk '/sent / {print $2}' | sed -e 's|,||g')
+            # bytesrate=$(cat ${LOGDIR}/rsyncbench.log | awk '/sent / {print $7}' | sed -e 's|,||g')
+            numfiles=$(cat ${LOGDIR}/${RSYNCLOGFILENAME} | awk '/Number of files:/ {print $0}' | cut -d " " -f6- | sed -e 's|(||g' -e 's|)||g')
+            speedup=$(cat ${LOGDIR}/${RSYNCLOGFILENAME} | awk '/total size is / {print $10}')
+            totalbytes=$(cat ${LOGDIR}/${RSYNCLOGFILENAME} | awk '/total size is / {print $7}' | sed -e 's|,||g')
+            sentbytes=$(cat ${LOGDIR}/${RSYNCLOGFILENAME} | awk '/sent / {print $5}' | sed -e 's|,||g')
+            sentmegabytes=$(echo "scale=4; $sentbytes/1024/1024" |bc)
+            bytesrate=$(cat ${LOGDIR}/${RSYNCLOGFILENAME} | awk '/sent / {print $10}' | sed -e 's|,||g')
+            mbrate=$(echo "scale=4; $bytesrate/1024/1024" | bc)
+            transfertime=$(awk '{print $5}' ${LOGDIR}/time.txt | sed -e 's|s||g')
+            cpu=$(awk '{print $11}' ${LOGDIR}/time.txt | sed -e 's|s||g')
+            mem=$(awk '{print $13}' ${LOGDIR}/time.txt | sed -e 's|s||g')
+            transferspeed=$(echo "scale=4; ($sentbytes/$transfertime)/1024/1024" | bc)
+            echo "[rsync ${RSYNC_VER} $hash-$comp-${lvl} $numfiles" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
+            echo "[rsync ${RSYNC_VER} $hash-$comp-${lvl} total bytes: $totalbytes sent bytes: $sentbytes (${bytesrate} per second)" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
+            echo "[rsync ${RSYNC_VER} $hash-$comp-${lvl} transfer speed (MB/s): $transferspeed speedup: $speedup" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
+            cat "${LOGDIR}/time.txt" | tee -a "${LOGDIR}/${RSYNCLOGFILENAME}"
+            echo "rsync-${RSYNC_VER}-${hash}-${comp}-${lvl},${transferspeed},${transfertime},${cpu},${mem},${sentbytes},$sentmegabytes" >> "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
+            echo
+            cleanup "$dstdir" "${LOGDIR}/${RSYNCLOGFILENAME}"
+          done
+        fi
       done
     done
   fi
   if [ -f "${LOGDIR}/${RSYNCLOGFILENAME_CSV}" ]; then
     echo "csv log: ${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
+    echo
+    cat "${LOGDIR}/${RSYNCLOGFILENAME_CSV}"
   fi
 }
 
