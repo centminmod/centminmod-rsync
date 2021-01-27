@@ -9,7 +9,7 @@ Custom rsync RPMs for CentOS 7 64bit based Centmin Mod LEMP stacks
 # Install & Dependencies
 
 ```
-yum -y install acl libacl-devel attr libattr-devel xxhash-devel libzstd-devel lz4-devel
+yum -y install acl libacl-devel attr libattr-devel libzstd-devel lz4-devel xxhash xxhash-libs xxhash-devel
 ```
 
 non-avx2 install
