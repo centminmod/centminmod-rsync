@@ -4,7 +4,7 @@ Custom rsync RPMs for CentOS 7 64bit based Centmin Mod LEMP stacks
 
 * rsync 3.2.3 no avx2 and avx2 yum packages with [xxHash](http://cyan4973.github.io/xxHash/#benchmarks) & [zstd](https://github.com/facebook/zstd) support
 * rsync 3.1.3
-* rsync 3.1.4 [dev build log](https://git.samba.org/?p=rsync.git;a=shortlog)
+* rsync 3.2.4 [dev build log](https://git.samba.org/?p=rsync.git;a=shortlog) & (https://download.samba.org/pub/rsync/NEWS)
 
 # Install & Dependencies
 
@@ -22,6 +22,12 @@ avx2 install
 
 ```
 yum localinstall rsync-custom-avx2-3.2.3-1.el7.x86_64.rpm
+```
+
+rsync 3.2.4 dev build install
+
+```
+yum localinstall rsync-custom-3.2.4-1.el7.x86_64.rpm
 ```
 
 # CentOS 7 stock distro rsync version
@@ -62,6 +68,53 @@ rpm -qa --changelog rsync | head -n20
 
 * Tue Jan 24 2017 Michal Ruprich - 3.0.9-18
 - Resolves: #1324754 -  rsyncd unit enters failed state on exit
+```
+
+# rsync 3.2.4 dev build install (not yet renamed 3.2.4)
+
+```
+rsync --version
+rsync  version v3.2.3-126-g1f0e62f1  protocol version 31
+Copyright (C) 1996-2020 by Andrew Tridgell, Wayne Davison, and others.
+Web site: https://rsync.samba.org/
+Capabilities:
+    64-bit files, 64-bit inums, 64-bit timestamps, 64-bit long ints,
+    socketpairs, symlinks, symtimes, hardlinks, hardlink-specials,
+    hardlink-symlinks, IPv6, atimes, batchfiles, inplace, append, ACLs,
+    xattrs, optional protect-args, iconv, prealloc, stop-at, no crtimes
+Optimizations:
+    SIMD, asm, openssl-crypto
+Checksum list:
+    xxh128 xxh3 xxh64 (xxhash) md5 md4 none
+Compress list:
+    zstd lz4 zlibx zlib none
+
+rsync comes with ABSOLUTELY NO WARRANTY.  This is free software, and you
+are welcome to redistribute it under certain conditions.  See the GNU
+General Public Licence for details.
+```
+```
+yum -q info rsync-custom
+Installed Packages
+Name        : rsync-custom
+Arch        : x86_64
+Version     : 3.2.4
+Release     : 1.el7
+Size        : 896 k
+Repo        : installed
+From repo   : /rsync-custom-3.2.4-1.el7.x86_64
+Summary     : rsync 3.2.4 unreleased master branch for centminmod.com LEMP stack
+URL         : https://centminmod.com
+License     : unknown
+Description : rsync 3.2.4 for centminmod.com LEMP stacks
+```
+```
+rpm -qlp rsync-custom-3.2.4-1.el7.x86_64.rpm
+/usr/local/bin/rsync
+/usr/local/bin/rsync-ssl
+/usr/local/share/man/man1/rsync-ssl.1
+/usr/local/share/man/man1/rsync.1
+/usr/local/share/man/man5/rsyncd.conf.5
 ```
 
 # Custom rsync 3.2.3
